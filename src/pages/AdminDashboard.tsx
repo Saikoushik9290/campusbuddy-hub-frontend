@@ -1,11 +1,10 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Upload, User, LogOut, News, Phone, Calendar, FileText, Shield } from 'lucide-react';
+import { Upload, User, LogOut, Newspaper, Phone, Calendar, FileText, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AdminDashboard = () => {
@@ -43,7 +42,7 @@ const AdminDashboard = () => {
   };
 
   const tabs = [
-    { id: 'news', label: 'Latest News', icon: News },
+    { id: 'news', label: 'Latest News', icon: Newspaper },
     { id: 'faculty', label: 'Faculty Contacts', icon: Phone },
     { id: 'timetable', label: 'Timetable', icon: Calendar },
     { id: 'papers', label: 'Question Papers', icon: FileText }
@@ -116,7 +115,7 @@ const AdminDashboard = () => {
               <Card className="shadow-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
-                    <News className="w-5 h-5 text-blue-600" />
+                    <Newspaper className="w-5 h-5 text-blue-600" />
                     <span>Upload Latest News</span>
                   </CardTitle>
                 </CardHeader>
