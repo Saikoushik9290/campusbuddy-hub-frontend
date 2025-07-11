@@ -1,0 +1,213 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - CampusBuddy</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-graduation-cap"></i>
+                <span>CampusBuddy</span>
+            </div>
+            <div class="nav-buttons">
+                <button class="btn btn-outline" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard">
+        <div class="dashboard-header">
+            <div class="container">
+                <div class="dashboard-nav">
+                    <h1 class="dashboard-title">
+                        <i class="fas fa-user-graduate"></i>
+                        Student Dashboard
+                    </h1>
+                    <div class="user-info">
+                        <span>Welcome, Student!</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+            <div class="container">
+                <div class="dashboard-grid">
+                    <!-- Chatbot Section -->
+                    <div class="dashboard-card">
+                        <h3><i class="fas fa-robot"></i> AI Campus Assistant</h3>
+                        <div class="chatbot-container">
+                            <div class="chatbot-header">
+                                <h4>CampusBuddy Assistant</h4>
+                                <p>Ask me anything about campus!</p>
+                            </div>
+                            <div class="chatbot-messages" id="chatMessages">
+                                <div class="message bot-message">
+                                    <p>Hello! I'm your campus assistant. How can I help you today?</p>
+                                </div>
+                            </div>
+                            <div class="chatbot-input">
+                                <input type="text" id="chatInput" placeholder="Type your message...">
+                                <button class="btn btn-primary" onclick="sendMessage()">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notifications Section -->
+                    <div class="dashboard-card">
+                        <h3><i class="fas fa-bell"></i> Latest Notifications</h3>
+                        <div class="notifications-list" id="notificationsList">
+                            <div class="notification-item">
+                                <div class="notification-icon">
+                                    <i class="fas fa-bullhorn"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <h4>Important Notice</h4>
+                                    <p>Mid-semester exams will begin from March 15th, 2024.</p>
+                                    <span class="notification-time">2 hours ago</span>
+                                </div>
+                            </div>
+                            <div class="notification-item">
+                                <div class="notification-icon">
+                                    <i class="fas fa-calendar"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <h4>Schedule Update</h4>
+                                    <p>Monday's classes are cancelled due to maintenance.</p>
+                                    <span class="notification-time">5 hours ago</span>
+                                </div>
+                            </div>
+                            <div class="notification-item">
+                                <div class="notification-icon">
+                                    <i class="fas fa-graduation-cap"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <h4>Event Announcement</h4>
+                                    <p>Annual cultural fest registration is now open!</p>
+                                    <span class="notification-time">1 day ago</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timetable Section -->
+                    <div class="dashboard-card">
+                        <h3><i class="fas fa-calendar-alt"></i> My Timetable</h3>
+                        <div class="timetable-viewer">
+                            <div class="timetable-placeholder">
+                                <i class="fas fa-file-image"></i>
+                                <p>No timetable uploaded yet</p>
+                                <p class="small-text">Your admin will upload the timetable soon</p>
+                            </div>
+                            <div class="timetable-files" id="timetableFiles">
+                                <!-- Timetable files will be displayed here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Previous Year Questions -->
+                    <div class="dashboard-card">
+                        <h3><i class="fas fa-file-alt"></i> Previous Year Questions</h3>
+                        <div class="question-papers">
+                            <div class="papers-list" id="papersList">
+                                <div class="paper-item">
+                                    <div class="paper-icon">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </div>
+                                    <div class="paper-details">
+                                        <h4>Mathematics - 2023</h4>
+                                        <p>Final Exam Question Paper</p>
+                                    </div>
+                                    <button class="btn btn-outline btn-sm" onclick="downloadPaper('math-2023.pdf')">
+                                        <i class="fas fa-download"></i> Download
+                                    </button>
+                                </div>
+                                <div class="paper-item">
+                                    <div class="paper-icon">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </div>
+                                    <div class="paper-details">
+                                        <h4>Physics - 2023</h4>
+                                        <p>Mid-term Question Paper</p>
+                                    </div>
+                                    <button class="btn btn-outline btn-sm" onclick="downloadPaper('physics-2023.pdf')">
+                                        <i class="fas fa-download"></i> Download
+                                    </button>
+                                </div>
+                                <div class="paper-item">
+                                    <div class="paper-icon">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </div>
+                                    <div class="paper-details">
+                                        <h4>Chemistry - 2022</h4>
+                                        <p>Final Exam Question Paper</p>
+                                    </div>
+                                    <button class="btn btn-outline btn-sm" onclick="downloadPaper('chemistry-2022.pdf')">
+                                        <i class="fas fa-download"></i> Download
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Faculty Contacts -->
+                    <div class="dashboard-card">
+                        <h3><i class="fas fa-phone"></i> Faculty Contacts</h3>
+                        <div class="faculty-contacts">
+                            <div class="contact-list" id="facultyList">
+                                <div class="contact-item">
+                                    <div class="contact-avatar">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="contact-details">
+                                        <h4>Dr. John Smith</h4>
+                                        <p>Mathematics Department</p>
+                                        <p><i class="fas fa-phone"></i> +1 (555) 123-4567</p>
+                                        <p><i class="fas fa-envelope"></i> john.smith@college.edu</p>
+                                    </div>
+                                </div>
+                                <div class="contact-item">
+                                    <div class="contact-avatar">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="contact-details">
+                                        <h4>Dr. Sarah Johnson</h4>
+                                        <p>Physics Department</p>
+                                        <p><i class="fas fa-phone"></i> +1 (555) 234-5678</p>
+                                        <p><i class="fas fa-envelope"></i> sarah.johnson@college.edu</p>
+                                    </div>
+                                </div>
+                                <div class="contact-item">
+                                    <div class="contact-avatar">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="contact-details">
+                                        <h4>Dr. Michael Brown</h4>
+                                        <p>Chemistry Department</p>
+                                        <p><i class="fas fa-phone"></i> +1 (555) 345-6789</p>
+                                        <p><i class="fas fa-envelope"></i> michael.brown@college.edu</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="student-dashboard.js"></script>
+</body>
+</html>
