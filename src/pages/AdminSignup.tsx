@@ -4,8 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { User, Mail, Lock, Key, ArrowLeft, Shield } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { useEffect } from 'react';
 
 const AdminSignup = () => {
   const [formData, setFormData] = useState({
@@ -15,7 +18,18 @@ const AdminSignup = () => {
     confirmPassword: '',
     adminKey: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const { signUp, user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Redirect if already logged in
+    if (user) {
+      navigate('/admin-dashboard');
+    }
+  }, [user, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -24,19 +38,39 @@ const AdminSignup = () => {
     });
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
+      setError('Passwords do not match!');
+      setLoading(false);
       return;
     }
+
     if (formData.adminKey !== 'ADMIN123') {
-      alert('Invalid admin key!');
+      setError('Invalid admin key!');
+      setLoading(false);
       return;
     }
-    console.log('Admin signup:', formData);
-    // Simulate signup success
-    navigate('/admin-dashboard');
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await signUp(formData.email, formData.password, formData.name, 'admin');
+
+    if (error) {
+      setError(error.message || 'An error occurred during signup');
+      setLoading(false);
+    } else {
+      setSuccess('Admin account created successfully! Please check your email to verify your account.');
+      setLoading(false);
+    }
   };
 
   return (
@@ -64,6 +98,18 @@ const AdminSignup = () => {
           </CardHeader>
           
           <CardContent>
+            {error && (
+              <Alert variant="destructive" className="mb-6">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {success && (
+              <Alert className="mb-6">
+                <AlertDescription>{success}</AlertDescription>
+              </Alert>
+            )}
+
             <form onSubmit={handleSignup} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-gray-700 font-medium">
@@ -80,6 +126,7 @@ const AdminSignup = () => {
                     onChange={handleInputChange}
                     className="pl-12 h-12 border-gray-300 focus:border-purple-500 focus:ring-purple-500"
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -99,6 +146,7 @@ const AdminSignup = () => {
                     onChange={handleInputChange}
                     className="pl-12 h-12 border-gray-300 focus:border-purple-500 focus:ring-purple-500"
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -113,11 +161,12 @@ const AdminSignup = () => {
                     id="password"
                     name="password"
                     type="password"
-                    placeholder="Create a password"
+                    placeholder="Create a password (min 6 characters)"
                     value={formData.password}
                     onChange={handleInputChange}
                     className="pl-12 h-12 border-gray-300 focus:border-purple-500 focus:ring-purple-500"
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -137,6 +186,7 @@ const AdminSignup = () => {
                     onChange={handleInputChange}
                     className="pl-12 h-12 border-gray-300 focus:border-purple-500 focus:ring-purple-500"
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -151,23 +201,25 @@ const AdminSignup = () => {
                     id="adminKey"
                     name="adminKey"
                     type="password"
-                    placeholder="Enter admin key"
+                    placeholder="Enter admin key (ADMIN123)"
                     value={formData.adminKey}
                     onChange={handleInputChange}
                     className="pl-12 h-12 border-gray-300 focus:border-purple-500 focus:ring-purple-500"
                     required
+                    disabled={loading}
                   />
                 </div>
                 <p className="text-sm text-gray-500">
-                  Contact your institution for the admin key
+                  Use ADMIN123 as the admin key for testing
                 </p>
               </div>
               
               <Button
                 type="submit"
                 className="w-full h-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold transition-all duration-300 transform hover:scale-105"
+                disabled={loading}
               >
-                Create Admin Account
+                {loading ? 'Creating Account...' : 'Create Admin Account'}
               </Button>
             </form>
             

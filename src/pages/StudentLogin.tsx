@@ -4,19 +4,41 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Mail, Lock, ArrowLeft, Sparkles } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { useEffect } from 'react';
 
 const StudentLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const { signIn, user } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    // Redirect if already logged in
+    if (user) {
+      navigate('/student-dashboard');
+    }
+  }, [user, navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Student login:', { email, password });
-    // Simulate login success
-    navigate('/student-dashboard');
+    setLoading(true);
+    setError('');
+
+    const { error } = await signIn(email, password);
+
+    if (error) {
+      setError(error.message || 'An error occurred during login');
+      setLoading(false);
+    } else {
+      // Navigation will happen automatically due to auth state change
+      console.log('Login successful, redirecting...');
+    }
   };
 
   return (
@@ -44,6 +66,12 @@ const StudentLogin = () => {
           </CardHeader>
           
           <CardContent>
+            {error && (
+              <Alert variant="destructive" className="mb-6">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-gray-700 font-medium">
@@ -59,6 +87,7 @@ const StudentLogin = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-12 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -77,6 +106,7 @@ const StudentLogin = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-12 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -84,8 +114,9 @@ const StudentLogin = () => {
               <Button
                 type="submit"
                 className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold transition-all duration-300 transform hover:scale-105"
+                disabled={loading}
               >
-                Sign In
+                {loading ? 'Signing In...' : 'Sign In'}
               </Button>
             </form>
             

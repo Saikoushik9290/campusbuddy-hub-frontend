@@ -4,19 +4,41 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Lock, ArrowLeft, Sparkles, Shield } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Mail, Lock, ArrowLeft, Shield } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { useEffect } from 'react';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const { signIn, user } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    // Redirect if already logged in
+    if (user) {
+      navigate('/admin-dashboard');
+    }
+  }, [user, navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Admin login:', { email, password });
-    // Simulate login success
-    navigate('/admin-dashboard');
+    setLoading(true);
+    setError('');
+
+    const { error } = await signIn(email, password);
+
+    if (error) {
+      setError(error.message || 'An error occurred during login');
+      setLoading(false);
+    } else {
+      // Navigation will happen automatically due to auth state change
+      console.log('Admin login successful, redirecting...');
+    }
   };
 
   return (
@@ -44,6 +66,12 @@ const AdminLogin = () => {
           </CardHeader>
           
           <CardContent>
+            {error && (
+              <Alert variant="destructive" className="mb-6">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-gray-700 font-medium">
@@ -59,6 +87,7 @@ const AdminLogin = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-12 h-12 border-gray-300 focus:border-purple-500 focus:ring-purple-500"
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -77,6 +106,7 @@ const AdminLogin = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-12 h-12 border-gray-300 focus:border-purple-500 focus:ring-purple-500"
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -84,8 +114,9 @@ const AdminLogin = () => {
               <Button
                 type="submit"
                 className="w-full h-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold transition-all duration-300 transform hover:scale-105"
+                disabled={loading}
               >
-                Sign In as Admin
+                {loading ? 'Signing In...' : 'Sign In as Admin'}
               </Button>
             </form>
             
