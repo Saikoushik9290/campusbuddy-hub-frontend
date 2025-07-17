@@ -1,16 +1,26 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Bell, Calendar, Download, MessageCircle, User, LogOut, Send, Clock, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const StudentDashboard = () => {
   const [chatMessage, setChatMessage] = useState('');
   const [chatHistory, setChatHistory] = useState([
     { type: 'bot', message: 'Hello! I\'m your CampusBuddy assistant. How can I help you today?' }
   ]);
+  
+  // Personalized Academic Assistant state
+  const [selectedBranch, setSelectedBranch] = useState('');
+  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedSection, setSelectedSection] = useState('');
+  const [academicData, setAcademicData] = useState(null);
+  const [pyqData, setPyqData] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const notifications = [
     { id: 1, title: 'Assignment Due Tomorrow', message: 'Your Math assignment is due tomorrow at 11:59 PM', time: '2 hours ago', type: 'urgent' },
@@ -25,25 +35,80 @@ const StudentDashboard = () => {
     { time: '4:00 PM', subject: 'English', room: 'Room 301', instructor: 'Ms. Davis' }
   ];
 
-  const previousPapers = [
-    { subject: 'Mathematics', year: '2023', type: 'PDF', size: '2.5 MB' },
-    { subject: 'Physics', year: '2023', type: 'PDF', size: '3.1 MB' },
-    { subject: 'Chemistry', year: '2022', type: 'PDF', size: '2.8 MB' },
-    { subject: 'English', year: '2023', type: 'PDF', size: '1.9 MB' }
-  ];
+  const branches = ['IT', 'CSE', 'CSD', 'CSM', 'MECH', 'CIVIL', 'EEE', 'ECE'];
+  const years = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+  const sections = ['A', 'B', 'C'];
+
+  // Fetch academic data when selection changes
+  useEffect(() => {
+    if (selectedBranch && selectedYear && selectedSection) {
+      fetchAcademicData();
+    }
+  }, [selectedBranch, selectedYear, selectedSection]);
+
+  const fetchAcademicData = async () => {
+    setLoading(true);
+    try {
+      // Fetch academic data
+      const { data: academic, error: academicError } = await supabase
+        .from('academic_data')
+        .select('*')
+        .eq('branch', selectedBranch)
+        .eq('year', selectedYear)
+        .eq('section', selectedSection)
+        .maybeSingle();
+
+      if (academicError) throw academicError;
+      setAcademicData(academic);
+
+      // Fetch PYQs
+      const { data: pyqs, error: pyqError } = await supabase
+        .from('pyqs')
+        .select('*')
+        .eq('branch', selectedBranch)
+        .eq('year', selectedYear)
+        .eq('section', selectedSection);
+
+      if (pyqError) throw pyqError;
+      setPyqData(pyqs || []);
+    } catch (error) {
+      console.error('Error fetching academic data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSendMessage = () => {
     if (!chatMessage.trim()) return;
     
     setChatHistory(prev => [...prev, { type: 'user', message: chatMessage }]);
+    const userMessage = chatMessage.toLowerCase();
     setChatMessage('');
     
-    // Simulate bot response
+    // Smart chat logic
     setTimeout(() => {
-      setChatHistory(prev => [...prev, { 
-        type: 'bot', 
-        message: 'I understand your query. For detailed assistance, please contact your faculty or check the announcements section.' 
-      }]);
+      let botResponse = '';
+      
+      if (!academicData && (!selectedBranch || !selectedYear || !selectedSection)) {
+        botResponse = 'Please first select your Branch, Year, and Section from the dropdown menus above to get personalized information.';
+      } else if (userMessage.includes('hod') || userMessage.includes('head')) {
+        botResponse = academicData ? `The HOD for ${selectedBranch} is ${academicData.hod_name}.` : 'No HOD information available for your selection.';
+      } else if (userMessage.includes('timetable') || userMessage.includes('schedule')) {
+        botResponse = academicData?.timetable_url ? 
+          `You can view your timetable here: ${academicData.timetable_url}` : 
+          'No timetable available for your current selection.';
+      } else if (userMessage.includes('pyq') || userMessage.includes('previous') || userMessage.includes('question')) {
+        if (pyqData.length > 0) {
+          const subjects = pyqData.map(p => p.subject_name).join(', ');
+          botResponse = `Available PYQs for your selection: ${subjects}. You can download them from the Previous Year Papers section below.`;
+        } else {
+          botResponse = 'No previous year question papers available for your current selection.';
+        }
+      } else {
+        botResponse = `I understand your query about "${chatMessage}". ${academicData ? 'Based on your current selection, you can ask me about HOD, timetable, or previous year questions.' : 'Please select your branch, year, and section first to get personalized responses.'}`;
+      }
+      
+      setChatHistory(prev => [...prev, { type: 'bot', message: botResponse }]);
     }, 1000);
   };
 
@@ -78,6 +143,92 @@ const StudentDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
+            {/* Personalized Academic Assistant */}
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <User className="w-5 h-5 text-purple-600" />
+                  <span>Personalized Academic Assistant</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Branch</label>
+                    <Select value={selectedBranch} onValueChange={setSelectedBranch}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Branch" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {branches.map((branch) => (
+                          <SelectItem key={branch} value={branch}>{branch}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                    <Select value={selectedYear} onValueChange={setSelectedYear}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Year" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {years.map((year) => (
+                          <SelectItem key={year} value={year}>{year}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Section</label>
+                    <Select value={selectedSection} onValueChange={setSelectedSection}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Section" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sections.map((section) => (
+                          <SelectItem key={section} value={section}>{section}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                {loading && (
+                  <div className="text-center py-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+                    <p className="text-gray-600 mt-2">Loading academic data...</p>
+                  </div>
+                )}
+                
+                {academicData && !loading && (
+                  <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 border border-purple-200">
+                    <h3 className="font-semibold text-gray-900 mb-2">Academic Information</h3>
+                    <p className="text-gray-700"><strong>HOD:</strong> {academicData.hod_name}</p>
+                    {academicData.timetable_url && (
+                      <p className="text-gray-700 mt-1">
+                        <strong>Timetable:</strong>{' '}
+                        <a href={academicData.timetable_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                          View Timetable
+                        </a>
+                      </p>
+                    )}
+                    {pyqData.length > 0 && (
+                      <p className="text-gray-700 mt-1">
+                        <strong>Available PYQs:</strong> {pyqData.length} subjects
+                      </p>
+                    )}
+                  </div>
+                )}
+                
+                {selectedBranch && selectedYear && selectedSection && !academicData && !loading && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <p className="text-yellow-800">No academic data found for your selection. Please contact admin to add information for {selectedBranch} {selectedYear} Section {selectedSection}.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Notifications */}
             <Card className="shadow-lg">
               <CardHeader>
@@ -149,23 +300,38 @@ const StudentDashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {previousPapers.map((paper, index) => (
-                    <div key={index} className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h3 className="font-semibold text-gray-900">{paper.subject}</h3>
-                          <p className="text-sm text-gray-600">Year: {paper.year}</p>
-                          <p className="text-sm text-gray-500">{paper.type} • {paper.size}</p>
+                {pyqData.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {pyqData.map((paper, index) => (
+                      <div key={index} className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h3 className="font-semibold text-gray-900">{paper.subject_name}</h3>
+                            <p className="text-sm text-gray-600">Year: {paper.paper_year}</p>
+                            <p className="text-sm text-gray-500">PDF</p>
+                          </div>
+                          <Button 
+                            size="sm" 
+                            className="bg-purple-600 hover:bg-purple-700"
+                            onClick={() => window.open(paper.paper_url, '_blank')}
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            Download
+                          </Button>
                         </div>
-                        <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
-                          <Download className="w-4 h-4 mr-2" />
-                          Download
-                        </Button>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">
+                      {selectedBranch && selectedYear && selectedSection 
+                        ? 'No previous year question papers available for your selection.' 
+                        : 'Select your branch, year, and section to view available question papers.'}
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

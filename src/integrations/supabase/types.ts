@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      academic_data: {
+        Row: {
+          branch: string
+          created_at: string | null
+          hod_name: string
+          id: string
+          section: string
+          timetable_url: string | null
+          updated_at: string | null
+          year: string
+        }
+        Insert: {
+          branch: string
+          created_at?: string | null
+          hod_name: string
+          id?: string
+          section: string
+          timetable_url?: string | null
+          updated_at?: string | null
+          year: string
+        }
+        Update: {
+          branch?: string
+          created_at?: string | null
+          hod_name?: string
+          id?: string
+          section?: string
+          timetable_url?: string | null
+          updated_at?: string | null
+          year?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -38,6 +71,39 @@ export type Database = {
           id?: string
           updated_at?: string | null
           user_type?: string
+        }
+        Relationships: []
+      }
+      pyqs: {
+        Row: {
+          branch: string
+          created_at: string | null
+          id: string
+          paper_url: string
+          paper_year: string
+          section: string
+          subject_name: string
+          year: string
+        }
+        Insert: {
+          branch: string
+          created_at?: string | null
+          id?: string
+          paper_url: string
+          paper_year: string
+          section: string
+          subject_name: string
+          year: string
+        }
+        Update: {
+          branch?: string
+          created_at?: string | null
+          id?: string
+          paper_url?: string
+          paper_year?: string
+          section?: string
+          subject_name?: string
+          year?: string
         }
         Relationships: []
       }
